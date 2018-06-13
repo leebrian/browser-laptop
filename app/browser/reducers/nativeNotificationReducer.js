@@ -43,8 +43,9 @@ const nativeNotifications = (state, action, immutableAction) => {
     case appConstants.APP_ON_NATIVE_NOTIFICATION_CONFIGURATION_REPORT:
       {
         const ok = !!action.get('ok')
+        const previous = userModelState.getUserModelValue(state, 'allowed')
 
-        if (!ok) appActions.changeSetting(settings.ADS_ENABLED, false)
+        if (ok !== previous) appActions.changeSetting(settings.ADS_ENABLED, ok)
 
         state = userModelState.setUserModelValue(state, 'configured', ok)
         break
