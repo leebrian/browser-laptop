@@ -585,8 +585,8 @@ const oneDay = (testingP ? 600 : 86400) * 1000
 const oneHour = (testingP ? 25 : 3600) * 1000
 const hackStagingOn = true
 const roundTripOptions = {
-  debugP: false,
-  loggingP: false,
+  debugP: process.env.LEDGER_DEBUG === 'true',
+  loggingP: process.env.LEDGER_LOGGING === 'true',
   verboseP: process.env.LEDGER_VERBOSE === 'true',
   server: url.parse('https://' + (hackStagingOn || testingP ? 'collector-staging.brave.com' : 'collector.brave.com'))
 }
