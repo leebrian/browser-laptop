@@ -85,7 +85,7 @@ const userModelReducer = (state, action, immutableAction) => {
       }
     case appConstants.APP_IDLE_STATE_CHANGED: // TODO where to set this globally
       {
-        appActions.onUserModelLog('Idle state chnnged', { idleState: action.get('idleState') })
+        appActions.onUserModelLog('Idle state changed', { idleState: action.get('idleState') })
 
         if (action.get('idleState') === 'active') {
           state = userModel.recordUnIdle(state)
