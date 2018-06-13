@@ -60,7 +60,7 @@ const userModelReducer = (state, action, immutableAction) => {
       }
     case appConstants.APP_REMOVE_HISTORY_SITE:
       {
-        console.log('actionType remove history site')
+        appActions.onUserModelLog('History site removed', { historyKey: action.get('historyKey') })
         state = userModel.removeHistorySite(state, action)
         break
       }
@@ -85,9 +85,9 @@ const userModelReducer = (state, action, immutableAction) => {
       }
     case appConstants.APP_IDLE_STATE_CHANGED: // TODO where to set this globally
       {
-        console.log('idle state changed. action: ', action.toJS())
+        appActions.onUserModelLog('Idle state chnnged', { idleState: action.get('idleState') })
 
-        if (action.has('idleState') && action.get('idleState') === 'active') {
+        if (action.get('idleState') === 'active') {
           state = userModel.recordUnIdle(state)
           appActions.onNativeNotificationAllowedCheck(true)
         }
