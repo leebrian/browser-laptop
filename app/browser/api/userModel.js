@@ -150,6 +150,7 @@ const generateAdReportingEvent = (state, eventType, action) => {
           map.settings[v] = k !== key ? getSetting(k, state.settings) : action.get('value')
           if (k === settings.ADS_OPERATING_MODE) map.settings[v] = map.settings[v] ? 'B' : 'A'
         })
+        delete map.settings.enabled
         break
       }
     case 'foreground':
