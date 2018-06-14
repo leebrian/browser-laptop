@@ -699,6 +699,13 @@ const downloadSurveys = (state, surveys) => {
   appActions.onUserModelLog('Surveys downloaded', surveys)
   surveys = surveys.filter(survey => survey.get('status') === 'available')
 
+  if (testingP) {
+    const queue = userModelState.getUserSurveyQueue(state)
+
+    surveys = surveys.filter(survey =>
+                             !queue.some(entry => (survey.id === entry.id) && (entry.get('status') !== 'available')))
+  }
+
   state = userModelState.setUserSurveyQueue(state, surveys)
   appActions.onUserModelLog('Surveys available', surveys)
 
