@@ -53,10 +53,8 @@ const appendToRingBufferUnderKey = (state, key, item, maxRows) => {
 
   let previous = state.getIn(key)
 
-  if (!Immutable.List.isList(previous)) {
-    console.warn('Previously stored page score history is not a List.')
-    previous = Immutable.List()
-  }
+  // it's undefined...
+  if (!Immutable.List.isList(previous)) previous = Immutable.List()
 
   let ringbuf = previous.push(item)
 

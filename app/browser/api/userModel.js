@@ -5,11 +5,11 @@
 'use strict'
 const um = require('@brave-intl/bat-usermodel')
 const elph = require('@brave-intl/bat-elph')
-const braveNotifier = require('brave-node-notifier')
+const notifier = require('brave-ads-notifier')
 const path = require('path')
 const getSSID = require('detect-ssid')
 const underscore = require('underscore')
-const url = require('url')
+const urlFormat = require('url').format
 const uuidv4 = require('uuid/v4')
 
 const app = require('electron').app
@@ -197,7 +197,7 @@ const initialize = (state, adEnabled) => {
   initP = true
 
   // check if notifications are available
-  if (!braveNotifier.available()) {
+  if (!notifier.available()) {
     appActions.changeSetting(settings.ADS_ENABLED, false)
     state = userModelState.setUserModelValue(state, 'available', false)
   } else {
@@ -590,7 +590,7 @@ const roundTripOptions = {
   debugP: process.env.LEDGER_DEBUG === 'true',
   loggingP: process.env.LEDGER_LOGGING === 'true',
   verboseP: process.env.LEDGER_VERBOSE === 'true',
-  server: url.parse('https://' + (hackStagingOn || testingP ? 'collector-staging.brave.com' : 'collector.brave.com'))
+  server: urlParse('https://' + (hackStagingOn || testingP ? 'collector-staging.brave.com' : 'collector.brave.com'))
 }
 
 const collectActivityAsNeeded = (state, adEnabled) => {
@@ -651,7 +651,7 @@ const collectActivity = (state) => {
     if (err) {
       appActions.onUserModelLog('Event upload failed', {
         method: 'PUT',
-        server: url.format(roundTripOptions.server),
+        server: urlFormat(roundTripOptions.server),
         path: path,
         reason: err.toString()
       })
@@ -686,7 +686,7 @@ const uploadLogs = (state, stamp, retryIn) => {
 
     appActions.onUserModelLog('Survey download failed', {
       method: 'GET',
-      server: url.format(roundTripOptions.server),
+      server: urlFormat(roundTripOptions.server),
       path: path,
       reason: err.toString()
     })

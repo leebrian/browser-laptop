@@ -4,7 +4,7 @@
 
 'use strict'
 
-const braveNotifier = require('brave-node-notifier')
+const notifier = require('brave-ads-notifier')
 
 // Actions
 const appActions = require('../../../js/actions/appActions')
@@ -33,7 +33,7 @@ const nativeNotifications = (state, action, immutableAction) => {
       }
     case appConstants.APP_ON_NATIVE_NOTIFICATION_CONFIGURATION_CHECK:
       {
-        braveNotifier.configured((err, result) => {
+        notifier.configured((err, result) => {
           appActions.onUserModelLog(appConstants.APP_ON_NATIVE_NOTIFICATION_CONFIGURATION_CHECK, {err, result})
 
           appActions.onNativeNotificationConfigurationReport((!err) && (result))
@@ -52,7 +52,7 @@ const nativeNotifications = (state, action, immutableAction) => {
       }
     case appConstants.APP_ON_NATIVE_NOTIFICATION_ALLOWED_CHECK:
       {
-        braveNotifier.enabled((err, result) => {
+        notifier.enabled((err, result) => {
           appActions.onUserModelLog(appConstants.APP_ON_NATIVE_NOTIFICATION_ALLOWED_CHECK, {err, result})
 
           appActions.onNativeNotificationAllowedReport((!err) && (result), !!action.get('serveP'))
