@@ -45,9 +45,9 @@ const nativeNotifications = (state, action, immutableAction) => {
         const ok = !!action.get('ok')
         const previous = userModelState.getUserModelValue(state, 'allowed')
 
-        if (ok !== previous) appActions.changeSetting(settings.ADS_ENABLED, ok)
+        if (ok !== previous) state = userModelState.setUserModelValue(state, 'configured', ok)
 
-        state = userModelState.setUserModelValue(state, 'configured', ok)
+        if (!ok) appActions.changeSetting(settings.ADS_ENABLED, false)
         break
       }
     case appConstants.APP_ON_NATIVE_NOTIFICATION_ALLOWED_CHECK:
@@ -62,8 +62,8 @@ const nativeNotifications = (state, action, immutableAction) => {
     case appConstants.APP_ON_NATIVE_NOTIFICATION_ALLOWED_REPORT:
       {
         const ok = !!action.get('ok')
-        const serveP = !!action.get('serveP')
         const previous = userModelState.getUserModelValue(state, 'allowed')
+        const serveP = !!action.get('serveP')
 
         if (ok !== previous) state = userModelState.setUserModelValue(state, 'allowed', ok)
         if ((!serveP) || (ok !== previous)) {
@@ -75,7 +75,6 @@ const nativeNotifications = (state, action, immutableAction) => {
 
           state = userModel.generateAdReportingEvent(state, 'settings', action)
         }
-
         if (!serveP) break
 
         if (ok) {

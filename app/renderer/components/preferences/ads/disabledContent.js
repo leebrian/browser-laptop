@@ -80,7 +80,7 @@ class DisabledContent extends React.Component {
   }
 
   render () {
-    const config = this.props.userModelData.config || false
+    const config = this.props.userModelData.configured || false
     const available = this.props.userModelData.available || false
 
     return <section className={css(styles.disabledContent)} data-test-id='disabledContent'>

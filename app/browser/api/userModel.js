@@ -18,15 +18,15 @@ const os = require('os')
 // Actions
 const appActions = require('../../../js/actions/appActions')
 
-// State
-const userModelState = require('../../common/state/userModelState')
-const settings = require('../../../js/constants/settings')
-const getSetting = require('../../../js/settings').getSetting
-const Immutable = require('immutable')
-
 // Constants
 const notificationTypes = require('../../common/constants/notificationTypes')
 const searchProviders = require('../../../js/data/searchProviders').providers
+const settings = require('../../../js/constants/settings')
+
+// State
+const userModelState = require('../../common/state/userModelState')
+const getSetting = require('../../../js/settings').getSetting
+const Immutable = require('immutable')
 
 // Utils
 const urlUtil = require('../../../js/lib/urlutil')
