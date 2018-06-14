@@ -65,6 +65,7 @@ const nativeNotifications = (state, action, immutableAction) => {
         const serveP = !!action.get('serveP')
         const previous = userModelState.getUserModelValue(state, 'allowed')
 
+        if (ok !== previous) state = userModelState.setUserModelValue(state, 'allowed', ok)
         if ((!serveP) || (ok !== previous)) {
           const action = Immutable.fromJS({
             actionType: appConstants.APP_CHANGE_SETTING,
@@ -75,7 +76,6 @@ const nativeNotifications = (state, action, immutableAction) => {
           state = userModel.generateAdReportingEvent(state, 'settings', action)
         }
 
-        state = userModelState.setUserModelValue(state, 'allowed', ok)
         if (!serveP) break
 
         if (ok) {

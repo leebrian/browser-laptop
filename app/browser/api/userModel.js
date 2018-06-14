@@ -33,6 +33,7 @@ const urlUtil = require('../../../js/lib/urlutil')
 const urlParse = require('../../common/urlParse')
 const roundtrip = require('./ledger').roundtrip
 
+let initP
 let foregroundP
 
 let matrixData
@@ -191,9 +192,9 @@ const processLocales = (state, result) => {
 }
 
 const initialize = (state, adEnabled) => {
-  if (adEnabled === false) {
-    return state
-  }
+  if ((adEnabled === false) || (initP)) return state
+
+  initP = true
 
   // check if notifications are available
   if (!braveNotifier.available()) {
