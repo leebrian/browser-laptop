@@ -46,16 +46,16 @@ const userModelReducer = (state, action, immutableAction) => {
         const stat = changeInfo && changeInfo.get('status')
         const complete = stat === 'complete'
 
-        if (complete) {
-          state = userModel.generateAdReportingEvent(state, 'load', action)
+        const tabValue = action.get('tabValue')
+        if ((tabValue) && (tabValue.get('incongnito') === true)) {
+          appActions.onUserModelLog('Private Tab', { url: tabValue.get('url') })
+          break
         }
 
-        const tabValue = action.get('tabValue')
-
-        const blurred = tabValue && !tabValue.get('active')
+        if (complete) state = userModel.generateAdReportingEvent(state, 'load', action)
 
         state = userModel.tabUpdate(state, action)
-        if (blurred) state = userModel.generateAdReportingEvent(state, 'blur', action)
+        if (tabValue && !tabValue.get('active')) state = userModel.generateAdReportingEvent(state, 'blur', action)
         break
       }
     case appConstants.APP_REMOVE_HISTORY_SITE:
@@ -76,10 +76,16 @@ const userModelReducer = (state, action, immutableAction) => {
     case appConstants.APP_TAB_ACTIVATE_REQUESTED:  // tab switching
       {
         const tabId = action.get('tabId')
-        const tab = tabState.getByTabId(state, tabId)
-        if (tab == null) break
+        const tabValue = tabState.getByTabId(state, tabId)
 
-        const url = tab.get('url')
+        if (tabValue == null) break
+
+        if (tabValue.get('incognito') === true) {
+          appActions.onUserModelLog('Private Tab', { url: tabValue.get('url') })
+          break
+        }
+
+        const url = tabValue.get('url')
         state = userModel.tabUpdate(state, action)
         state = userModel.testShoppingData(state, url)
         state = userModel.testSearchState(state, url)
@@ -99,13 +105,19 @@ const userModelReducer = (state, action, immutableAction) => {
     case appConstants.APP_TEXT_SCRAPER_DATA_AVAILABLE:
       {
         const tabId = action.get('tabId')
-        const tab = tabState.getByTabId(state, tabId)
-        if (tab == null) break
+        const tabValue = tabState.getByTabId(state, tabId)
 
-        const url = tab.get('url')
+        if (tabValue == null) break
+
+        if (tabValue.get('incognito') === true) {
+          appActions.onUserModelLog('Private Tab', { url: tabValue.get('url') })
+          break
+        }
+
+        const url = tabValue.get('url')
         state = userModel.testShoppingData(state, url)
         state = userModel.testSearchState(state, url)
-        state = userModel.classifyPage(state, action, tab.get('windowId'))
+        state = userModel.classifyPage(state, action, tabValue.get('windowId'))
         break
       }
     case appConstants.APP_SHUTTING_DOWN:

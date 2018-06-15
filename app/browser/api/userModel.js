@@ -109,6 +109,9 @@ const generateAdReportingEvent = (state, eventType, action) => {
     case 'load':
       {
         const tabValue = action.get('tabValue')
+
+        if ((!tabValue) || (tabValue.get('incognito'))) return state
+
         const tabUrl = tabValue.get('url')
 
         if (!tabUrl.startsWith('http://') && !tabUrl.startsWith('https://')) return state
