@@ -42,7 +42,15 @@ let sampleAdFeed
 
 let lastSingleClassification
 
+const noop = (state) => {
+// IF [ we haven't initialized yet OR we're not enabled ], RETURN state
+
+  return (((!matrixData) || (!priorData) || (!userModelState.getAdEnabledValue(state))) && state)
+}
+
 const generateAdReportingEvent = (state, eventType, action) => {
+  if (noop(state)) return state
+
   let map = {}
 
   map.type = eventType
@@ -65,6 +73,7 @@ const generateAdReportingEvent = (state, eventType, action) => {
               map.notificationUrl = data.get('notificationUrl')
               break
             }
+
           case notificationTypes.NOTIFICATION_RESULT:
             {
               const uuid = data.get('uuid')
@@ -77,12 +86,14 @@ const generateAdReportingEvent = (state, eventType, action) => {
               }
               break
             }
+
           case notificationTypes.NOTIFICATION_CLICK:
           case notificationTypes.NOTIFICATION_TIMEOUT:
             {
               // handling these in the other event, currently. 2018.05.23
               return state
             }
+
           default:
             {
               // not an event we want to process
@@ -94,6 +105,7 @@ const generateAdReportingEvent = (state, eventType, action) => {
         map.notificationId = data.get('uuid')
         break
       }
+
     case 'load':
       {
         const tabValue = action.get('tabValue')
@@ -115,16 +127,19 @@ const generateAdReportingEvent = (state, eventType, action) => {
         map.tabClassification = classification
         break
       }
+
     case 'blur':
       {
         map.tabId = String(action.get('tabValue').get('tabId'))
         break
       }
+
     case 'focus':
       {
         map.tabId = String(action.get('tabId'))
         break
       }
+
     case 'settings':
       {
         const key = action.get('key')
@@ -154,6 +169,7 @@ const generateAdReportingEvent = (state, eventType, action) => {
         delete map.settings.enabled
         break
       }
+
     case 'foreground':
     case 'background':
     case 'restart':
@@ -170,11 +186,9 @@ const generateAdReportingEvent = (state, eventType, action) => {
     last.stamp = map.stamp
     if (underscore.isEqual(last, map)) return state
   }
-  state = userModelState.appendToReportingEventQueue(state, map)
-
   appActions.onUserModelLog('Event logged', map)
 
-  return state
+  return userModelState.appendToReportingEventQueue(state, map)
 }
 
 const processLocales = (state, result) => {
@@ -184,7 +198,12 @@ const processLocales = (state, result) => {
 
   let locale = getSetting(settings.ADS_LOCALE, state.settings)
 
-  if (locale) try { locale = um.setLocaleSync(locale) } catch (ex) { locale = '' }
+  if (locale) {
+    try { locale = um.setLocaleSync(locale) } catch (ex) {
+      appActions.onUserModelLog('Locale error', { locale: locale, reason: ex.toString(), stack: ex.stack })
+      locale = ''
+    }
+  }
 
   if (result.indexOf(locale) === -1) appActions.changeSetting(settings.ADS_LOCALE, result[0])
 
@@ -220,9 +239,8 @@ const initialize = (state, adEnabled) => {
   retrieveSSID()
 
   state = processLocales(state, um.getLocalesSync())
-  state = confirmAdUUIDIfAdEnabled(state)
 
-  return state
+  return confirmAdUUIDIfAdEnabled(state)
 }
 
 const appFocused = (state, focusP) => {
@@ -233,35 +251,32 @@ const appFocused = (state, focusP) => {
 
 const tabUpdate = (state, action) => {
   // nothing but update the ums for now
-  state = userModelState.setLastUserActivity(state)
 
-  return state
+  return userModelState.setLastUserActivity(state)
 }
 
 const removeHistorySite = (state, action) => {
   // check to see how ledger removes history
   // first need to establish site classification DB in userModelState
-
   // blow it all away for now
-  state = userModelState.removeAllHistory(state)
 
-  return state
+  return userModelState.removeAllHistory(state)
 }
 
 const removeAllHistory = (state) => {
   state = userModelState.removeAllHistory(state)
-  state = confirmAdUUIDIfAdEnabled(state)
 
-  return state
+  return confirmAdUUIDIfAdEnabled(state)
 }
 
 const saveCachedInfo = (state) => {
-  // writes stuff to leveldb
   return state
 }
 
 // begin timing related pieces
 const updateTimingModel = (state, special = null) => {
+  if (noop(state)) return state
+
   let letter
   if (special.length === 0) {
     letter = stateToLetterStd(state)
@@ -273,6 +288,7 @@ const updateTimingModel = (state, special = null) => {
     mdl = elph.initOnlineELPH()  // TODO init with useful Hspace
   }
   mdl = elph.updateOnlineELPH(letter, mdl)
+
   return userModelState.setUserModelTimingMdl(state, mdl)
 }
 
@@ -307,19 +323,25 @@ const valueToLowHigh = (x, thresh) => {
 // end timing related pieces
 
 const testShoppingData = (state, url) => {
+  if (noop(state)) return state
+
   const hostname = urlUtil.getHostname(url)
   const lastShopState = userModelState.getSearchState(state)
 
   if (hostname === 'amazon.com') {
     const score = 1.0   // eventually this will be more sophisticated than if(), but amazon is always a shopping destination
+
     state = userModelState.flagShoppingState(state, url, score)
   } else if (hostname !== 'amazon.com' && lastShopState) {
     state = userModelState.unFlagShoppingState(state)
   }
+
   return state
 }
 
 const testSearchState = (state, url) => {
+  if (noop(state)) return state
+
   const href = urlParse(url).href
   const lastSearchState = userModelState.getSearchState(state)
 
@@ -330,8 +352,7 @@ const testSearchState = (state, url) => {
 
     if ((x <= 0) || (href.indexOf(prefix.substr(0, x)) !== 0)) continue
 
-    state = userModelState.flagSearchState(state, url, 1.0)
-    return state
+    return userModelState.flagSearchState(state, url, 1.0)
   }
 
   if (lastSearchState) state = userModelState.unFlagSearchState(state, url)
@@ -340,17 +361,15 @@ const testSearchState = (state, url) => {
 }
 
 const recordUnIdle = (state) => {
-  state = userModelState.setLastUserIdleStopTime(state)
-
-  return state
+  return userModelState.setLastUserIdleStopTime(state)
 }
 
 function cleanLines (x) {
   if (x == null) return []
 
   return x
-    .map(x => x.split(/\s+/)) // split each: ['the quick', 'when in'] -> [['the', 'quick'], ['when', 'in']]
-    .reduce((x, y) => x.concat(y), []) // flatten: [[a,b], [c,d]] -> [a, b, c, d]
+    .map(x => x.split(/\s+/)) // split each: [ 'the quick', 'when in' ] -> [[ 'the', 'quick' ], [ 'when', 'in' ]]
+    .reduce((x, y) => x.concat(y), []) // flatten: [[ a, b ], [ c,d ]] -> [ a, b, c, d ]
     .map(x => x.toLowerCase().trim())
 }
 
@@ -380,29 +399,28 @@ const goAheadAndShowTheAd = (windowId, notificationTitle, notificationText, noti
 }
 
 const classifyPage = (state, action, windowId) => {
-  let headers = action.getIn(['scrapedData', 'headers'])
-  let body = action.getIn(['scrapedData', 'body'])
-  let url = action.getIn(['scrapedData', 'url'])
+  if (noop(state)) return state
+
+  let headers = action.getIn([ 'scrapedData', 'headers' ])
+  let body = action.getIn([ 'scrapedData', 'body' ])
+  let url = action.getIn([ 'scrapedData', 'url' ])
 
   if (!headers) return state
 
   headers = cleanLines(headers)
   body = cleanLines(body)
 
-  let words = headers.concat(body) // combine
+  let words = headers.concat(body)
 
   if (words.length < um.minimumWordsToClassify) return state
 
   if (words.length > um.maximumWordsToClassify) words = words.slice(0, um.maximumWordsToClassify)
 
-  // don't do anything until our files have loaded in the background
-  if (!matrixData || !priorData) return state
-
   const pageScore = um.NBWordVec(words, matrixData, priorData)
 
   state = userModelState.appendPageScoreToHistoryAndRotate(state, pageScore)
 
-  let catNames = priorData['names']
+  let catNames = priorData.names
 
   let immediateMax = um.vectorIndexOfMax(pageScore)
   let immediateWinner = catNames[immediateMax].split('-')
@@ -421,8 +439,7 @@ const classifyPage = (state, action, windowId) => {
 }
 
 const checkReadyAdServe = (state, windowId) => {
-// since this is called on APP_IDLE_STATE_CHANGE, not a good idea to log here...
-  if (!priorData) return state
+  if (noop(state)) return state
 
   if (!foregroundP) {
     appActions.onUserModelLog('Ad not served', { reason: 'not in foreground' })
@@ -457,7 +474,7 @@ const checkReadyAdServe = (state, windowId) => {
     return state
   }
 
-  const catNames = priorData['names']
+  const catNames = priorData.names
   const mutable = true
   const history = userModelState.getPageScoreHistory(state, mutable)
   const scores = um.deriveCategoryScores(history)
@@ -474,7 +491,7 @@ const checkReadyAdServe = (state, windowId) => {
   let winnerOverTime, result
   for (let level in hierarchy) {
     winnerOverTime = hierarchy.slice(0, hierarchy.length - level).join('-')
-    result = bundle['categories'][winnerOverTime]
+    result = bundle.categories[winnerOverTime]
     if (result) break
   }
   if (!result) {
@@ -512,12 +529,13 @@ const checkReadyAdServe = (state, windowId) => {
     return state
   }
 
-  const notificationText = payload['notificationText']
-  const notificationUrl = payload['notificationURL']
-  const advertiser = payload['advertiser']
+  const notificationText = payload.notificationText
+  const notificationUrl = payload.notificationURL
+  const advertiser = payload.advertiser
   if (!notificationText || !notificationUrl || !advertiser) {
     appActions.onUserModelLog('Ad not served',
                               { reason: 'incomplete ad information', category, winnerOverTime, arbitraryKey, notificationUrl, notificationText, advertiser })
+
     return state
   }
 
@@ -526,17 +544,20 @@ const checkReadyAdServe = (state, windowId) => {
   goAheadAndShowTheAd(windowId, advertiser, notificationText, notificationUrl, uuid)
   appActions.onUserModelLog(notificationTypes.AD_SHOWN,
                             {category, winnerOverTime, arbitraryKey, notificationUrl, notificationText, advertiser, uuid, hierarchy})
-  state = userModelState.appendAdShownToAdHistory(state)
 
-  return state
+  return userModelState.appendAdShownToAdHistory(state)
 }
 
 const changeLocale = (state, locale) => {
-  try { locale = um.setLocaleSync(locale) } catch (ex) { return state }
+  if (noop(state)) return state
 
-  state = userModelState.setLocale(state, locale)
+  try { locale = um.setLocaleSync(locale) } catch (ex) {
+    appActions.onUserModelLog('Locale error', { locale: locale, reason: ex.toString(), stack: ex.stack })
 
-  return state
+    return state
+  }
+
+  return userModelState.setLocale(state, locale)
 }
 
 const retrieveSSID = () => {
@@ -545,7 +566,7 @@ const retrieveSSID = () => {
   // and if we're not on WiFi, there is no reliable way to determine the actual interface in use
 
   getSSID((err, ssid) => {
-    if (err) return appActions.onUserModelLog('SSID unavailble', { reason: err.toString() })
+    if (err) return appActions.onUserModelLog('SSID unavailable', { reason: err.toString() })
 
     appActions.onSSIDReceived(ssid)
   })
@@ -556,11 +577,7 @@ const generateAdUUIDString = () => {
 }
 
 const generateAndSetAdUUIDRegardless = (state) => {
-  let uuid = generateAdUUIDString()
-
-  state = userModelState.setAdUUID(state, uuid)
-
-  return state
+  return userModelState.setAdUUID(state, generateAdUUIDString())
 }
 
 const generateAndSetAdUUIDButOnlyIfDNE = (state) => {
@@ -575,9 +592,8 @@ const confirmAdUUIDIfAdEnabled = (state) => {
   let adEnabled = userModelState.getAdEnabledValue(state)
 
   if (adEnabled) state = generateAndSetAdUUIDButOnlyIfDNE(state)
-  state = collectActivityAsNeeded(state, adEnabled)
 
-  return state
+  return collectActivityAsNeeded(state, adEnabled)
 }
 
 let collectActivityId
@@ -621,6 +637,8 @@ const collectActivityAsNeeded = (state, adEnabled) => {
 }
 
 const collectActivity = (state) => {
+  if (noop(state)) return state
+
   const path = '/v1/reports/' + userModelState.getAdUUID(state)
   const events = userModelState.getReportingEventQueue(state).toJS()
   const mark = underscore.last(events)
@@ -666,6 +684,8 @@ const collectActivity = (state) => {
 }
 
 const uploadLogs = (state, stamp, retryIn) => {
+  if (noop(state)) return state
+
   const events = userModelState.getReportingEventQueue(state)
   const path = '/v1/surveys/reporter/' + userModelState.getAdUUID(state) + '?product=ads-test'
 
@@ -696,6 +716,8 @@ const uploadLogs = (state, stamp, retryIn) => {
 }
 
 const downloadSurveys = (state, surveys) => {
+  if (noop(state)) return state
+
   appActions.onUserModelLog('Surveys downloaded', surveys)
   surveys = surveys.filter(survey => survey.get('status') === 'available')
 
@@ -728,15 +750,15 @@ const getMethods = () => {
     testShoppingData,
     testSearchState,
     recordUnIdle,
-    updateTimingModel,
-    checkReadyAdServe,
     classifyPage,
     saveCachedInfo,
     changeLocale,
     collectActivity,
     uploadLogs,
     downloadSurveys,
-    retrieveSSID
+    retrieveSSID,
+    updateTimingModel,
+    checkReadyAdServe
   }
 
   let privateMethods = {}

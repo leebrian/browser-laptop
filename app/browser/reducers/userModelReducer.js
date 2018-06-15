@@ -60,7 +60,10 @@ const userModelReducer = (state, action, immutableAction) => {
       }
     case appConstants.APP_REMOVE_HISTORY_SITE:
       {
-        appActions.onUserModelLog('History site removed', { historyKey: action.get('historyKey') })
+        const historyKey = action.get('historyKey')
+
+        if (!historyKey) break
+
         state = userModel.removeHistorySite(state, action)
         break
       }
@@ -114,7 +117,7 @@ const userModelReducer = (state, action, immutableAction) => {
     case appConstants.APP_ADD_AUTOFILL_CREDIT_CARD:
       {
         // TODO test this SCL
-        const url = action.getIn(['details', 'newURL'])
+        const url = action.getIn([ 'details', 'newURL' ])
         state = userModelState.flagBuyingSomething(state, url)
         break
       }
