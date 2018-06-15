@@ -374,10 +374,10 @@ const userModelState = {
   setSSID: (state, value) => {
     if (!userModelState.getAdEnabledValue(state)) return state
 
-    if (!value || value.length === 0) value = 'unknown'
-    state = state.setIn([ 'userModel', 'currentSSID' ], value)
-
     const current = userModelState.getSSID(state)
+
+    if (!value) value = 'unknown'
+    state = state.setIn([ 'userModel', 'currentSSID' ], value)
 
     if (current !== value) {
       state = state.setIn([ 'settings', settings.ADS_PLACE ], userModelState.getAdPlace(state) || 'UNDISCLOSED')
@@ -387,14 +387,14 @@ const userModelState = {
   },
 
   getSSID: (state) => {
-    return state.getIn([ 'userModel', 'currentSSID' ]) || null
+    return (state.getIn([ 'userModel', 'currentSSID' ]) || null)
   },
 
   getAdPlace: (state) => {
     const ssid = userModelState.getSSID(state)
     const places = state.getIn([ 'userModel', 'places' ])
 
-    return ((places && !ssid && !isMap(places) && places.get(ssid)) || null)
+    return ((places && ssid && isMap(places) && places.get(ssid)) || 'UNDISCLOSED')
   },
 
   setAdPlace: (state, place) => {

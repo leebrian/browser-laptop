@@ -178,7 +178,7 @@ const generateAdReportingEvent = (state, eventType, action) => {
     case 'restart':
     default:
       {
-        map.place = userModelState.getAdPlace(state) || 'unspecified'
+        map.place = userModelState.getAdPlace(state)
         break
       }
   }
